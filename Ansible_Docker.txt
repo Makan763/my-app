@@ -1,0 +1,119 @@
+1.Installation d'ansible
+2. ajouter un utilisateur
+- Créer une instance ec2 et installer ansible.
+- Modifier le nom de host
+$ vi /etc/hostname 
+- Une fois ouvert le fichier, ecrit le nom préféré de votre hostname
+
+$useradd ansadmin  // ajout d'un utilisateur
+$passwd ansadmin   //donner un mot de passe à ansadmin
+password ansadmin:1234  // c'est le mot de passe de ansadmin
+$visudo  // il ouvre le fichier /etc/sudoers.tmp
+3. Ecrire la ligne ci-dessous en bas de # %wheel        ALL=(ALL)       NOPASSWD: ALL
+   ansadmin ALL=(ALL)      NOPASSWD:ALL
+4. $ vi /etc/ssh/sshd_config   // une fois que le fichier est ouvert
+- ajouter en bas de RekeyLimit default none: /Password
+- decommenter ça: PasswordAuthentication yes
+- commenter ça: PasswordAuthentication no
+
+5. $service sshd reload ou systemctl start sshd // il lance le service
+Redirecting to /bin/systemctl reload sshd.service
+Attention souvent le service n'est pas demarré alors il faut supprimer et releancer 
+6.Ouvre une nouvelle session et se connecter avec ton utilisateur ansadmin
+  $ssh-keygen
+  $ cd /home/ansadmin/.ssh/
+  $ll
+  $ sudo su -
+copier la clé public sur ta machine ,s'il demande le mot de passe met le 
+7. Installl ansible en amazon linux
+$ amazon-linux-extras install ansible2
+
+8. Se connecter à ma machine dockerhost
+$sudo su -
+$useradd ansadmin   //ajouter un l'utilisateur ansadmin
+passwd ansadmin     //donner le mot de passe ansadmin
+psw:1234
+8.$visudo
+ Ecrire la ligne ci-dessous en bas de # %wheel        ALL=(ALL)       NOPASSWD: ALL
+   ansadmin ALL=(ALL)      NOPASSWD:ALL
+
+9. aller sur le terminal docker 
+$ifconfig       il affiche ip adresse de docker et aller coller sur le host de ansible
+10.0.1.107      //Adresse IP privée de ta machine dockerhost
+
+10. $sudo su - ansadmin   // sur le terminal de ansible-server etant en mot root
+copier l'ip privé de la machine dockerhost et se connecter avec ssh puis fait exit.
+cette partie permet d'etablir une connexion ssh pour qu'ansible se connecte
+
+$ll -la     //affichage de mes dossiers
+$ cd .ssh   // j'accède dans le dossier .ssh
+$ll           // j'affiche le contenu
+$cd ..         // je sors dans le dossier
+$ssh-copy-id 172.17.0.1   //il copie la clé rsa.pub sur la machine dockerhost
+11. Maintenant allons verifier la cle sur la machine dockerhost
+12. se connecter avec l'utilisateur ansadmin
+$sudo su ansadmin   // se connecter user ansadmin et le mot de passe
+$ll     //affiche le nombre total des dossiers et fichiers
+$ll -la  //affiche les droit et les dossiers et fichiers
+$cd .ssh
+$ll
+$ssh-copy-id 10.0.1.107       // la commande copie la clé sur machine dockerhost
+Ensuite, il vous pose la question yes/no, saisir yes et entrer
+Puis met le mot de passe de ansadmin 
+Aller sur la machine DockerHost
+$sudo su - ansadmin
+$ ll -la
+$ cd .ssh
+$date //montre la date de la modification du jour
+$cat authorized_keys
+
+
+13. Aller sur le server ansible
+$cd ..
+$cat .ssh/id_rsa   // affiche la cle privée
+$cat .ssh/id_rsa.pub  //affiche la cle public
+Donc il faut comprendre que ssh-copy-id est une commande ansible mais c'est la cle public qu'il a copié sur la machine dockerhost
+$pwd
+/home/ansadmin
+$cd ..
+/home
+$ansible all -m ping 
+[WARNING]: Platform linux on host 10.0.1.86 is using the discovered Python interpreter at /usr/bin/python, but future
+installation of another Python interpreter could change this. See
+https://docs.ansible.com/ansible/2.9/reference_appendices/interpreter_discovery.html for more information.
+10.0.1.86 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+14.[ansadmin@ansible-server home]$ ansible all -m command -a uptime  
+
+10.0.1.86 | CHANGED | rc=0 >>
+ 14:06:21 up  5:29,  2 users,  load average: 0.00, 0.00, 0.00
+15.[ansadmin@ansible-server home]$ cd ..
+[ansadmin@ansible-server /]$
+
+****************** Ansible with jenkins**************************
+Aller sur l'interface jenkins
+- Dashboard
+- Manage Jenkins
+- Configure System
+- Vous Scrollez 
+- Clisquer sur Add
+- Name: ansible-server
+- Hostname:10.0.1.77   //Adr IP privée d'ansible-server
+- Username:ansadmin    //l'utilisateur qu'on a crée pour se connecter avec la machine dockerhost
+- Advanced
+- Cochez Use Password Authentification
+- password de ansadmin: 1234
+- Test configure
+Une fois que est lancé avec Success alors crée un nouveau projet jenkins
+- Dashboard
+- New Item
+Enter an item name: Copy_Artifacts_onto_Ansible
+- Copy from :BuildAndDeployOnContainer
+- Suprimer le contenu Exec Command
+-  $cd /opt
+- $ll

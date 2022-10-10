@@ -1,0 +1,42 @@
+Installation sur Amazon linux
+1. $sudo su -              // entrez en mode root
+2. $yum install docker -y  // install docker
+3. $service docker status  // verifie le service
+4. $service docker start  // demarré le service
+5. $service docker status //le service est demarré
+6. $docker images   //verifie les images docker mais nous n'avons pas d'image
+7. $docker ps  //vérifie combien des conteneurs en exécution?
+8. $docker ps -a // verifie les nombres totals des conteneurs.
+9. $docker --help // affiche les commandes de docker.
+***docker hub est un site docker qui nous permet d'obtenir des images***
+10. va sur le site docker hub et recuperer l'image officielle, ici nous nous avons d'une image tomcat:
+- aller dans la zone de recherche
+- saisir tomcat
+- copier docker pull tomcat
+- coller sur le terminal // s'il vous dit de se connecter à Daemon et l'etape 11 etc..
+11. $ service docker status  // verifie le 'etat du service
+12. $ service docker start   // le service est lancé, refait docker pull tomcat
+13. $ docker pull tomcat // notre image est créée
+14. $ docker images   // verifie l'image
+15. $ docker run -d --name tomcat-container -p 8081:8080 tomcat  // crée notre conteneur via image officiel tomcat
+16. $ docker ps -a //  le container est affiché.
+***Maintant copier/coller IP public sur le navigateur et le port de 8081***
+- Vous avez sur le navigateur ce site est inaccessible parceque le port 8081 n'est pas ajouté au groupe de securité, ajouter pour accéder
+- Ajouter de port 8081-9000(c'est à dire le port de docker commence de 8081 à 9000) au groupe de sécurité, si vous n'affecte pas 9000, il ne fonctionnera.
+- Une fois actualisé, vous obtenez une erreur 404 parce que le conteneur n'est pas executé avec la commmande exec.
+17. $ docker exec -it tomcat-container /bin/bash   // il permet d'exécuter le conteneur.
+18. $ ls            // nous affichons le contenu de tomcat
+19. $ pwd      // affiche le chemin
+20.cd webapps.dist // accéder dans le dossier 
+21. $ ls
+22. $cp -R * ../webapps/         // ça nous permet de copier les contenus du dossier(webapps.dist) dans le dossier(webapps) mais savoir que ../webapps est ce chemin (/usr/local/tomcat/webapps). * et * l'ensemble de contenu de webapps.dist puis cp -R est la commande
+23. $cd ../webapps/
+24. $ls
+25. $exit   // aller au root
+26. $docker ps -a   // affiche les conteneurs.
+27. $docker stop tomcat-container   // arrêter le container tomcat-container
+28. $docker ps  // le container est arrêté
+29. $docker run -d --name tomcat2 -p 8082:8080 tomcat:latest     //crée un nouveau container tomcat2 sur port 8082
+cp -R * ../webapps/
+Il faut demarrer le container tomcat2.
+30. $docker ps   // affiche le conteneur

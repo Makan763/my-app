@@ -1,0 +1,63 @@
+Pour avoir le mot de passe admin jenkins
+$cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Pour connaitre l'emplacement de git
+$ whereis git
+
+
+Pour installation de maven avec jenkins
+
+taper sur le navigateur maven download
+
+1. Copier le lien du binaire dans la root et fait cd /opt puis une fois dans le dossier opt
+$ wget https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+
+2. Extraire le fichier avec tar -xvzf 
+$ tar -xvzf apache-maven-3.8.6-bin.tar.gz
+3. Deplacer le ficher compréssé dans le dossier maven.
+$mv apache-maven-3.8.6 maven
+
+4.- $ cd maven/
+  - $cd /bin 
+5. $./mvn -v
+puis il faut sortir dans le dossier bin
+$ cd ~ pour sortir et se positionner dans la racine root
+6. pwd pour voir le chemin
+
+puis etant en root faites $ll -a pour voirle fichier .bash_profile
+
+7. Edit le fichier .bash_profile et Metter ce code en bas de block fi, dupliquer la session pour trouver jvm avec la commande suivante:
+$ sudo su -
+$ find / -name jvm
+
+8. Aller dans le dossier /usr/lib/jvm
+$ cd /usr/lib/jvm
+Tapez la commande suivante pour voir java_home directory et coller le chemin
+9. find / -name java-11*
+voici le contenu du fichier .bash_profile
+M2_HOME=/opt/maven
+M2=/opt/maven/bin
+JAVA_HOME=/usr/lib/jvm/java-11-openjdk-11.0.13.0.8-1.amzn2.0.3.x86_64
+10. Aller en bas du $PATH:$HOME/bin: coler($JAVA_HOME:$M2_HOME:$M2
+)
+11.Enregister et faites cette commande pour le chemin du path
+$ echo $PATH 
+Puis executer la commade suivante:
+12. $source .bash_profile
+$ echo $PATH
+13. voir la version mvn
+$ mvn -v
+14. Installer le pluggin maven dans jenkins
+15. Aller configuration global outils
+16. Installer jdk java-11 et decochez Install automatically
+17: Copier notre chemin java_home dans le JAVA_HOME jenkins (/usr/lib/jvm/java-11-openjdk-11.0.13.0.8-1.amzn2.0.3.x86_64
+) puis aller dans en bas et cliquer sur maven et decochez Install automatically
+Name: maven-3.8.3
+MAVEN_HOME:/opt/maven
+- New Item
+- FirstMavenProject
+- Cochez Git
+- Mettez le lien GitHub
+- Goals and Options: clean install
+- Apply
+- Build

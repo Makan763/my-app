@@ -1,0 +1,63 @@
+Pour changer la langue de jenkins
+-Telecharger locale dans manage Plugins et
+- Dashboard
+- Configure systeme
+- Ecrire en(anglais)
+- Cocher ignore
+
+demarrer service jenkins
+
+$systemctl list-units  //il affiche la liste des services
+$sudo -i
+$systemctl start jenkins
+$systemctl start jenkins
+1. Aller le navigateur puis afficher le mot de passe pour acceder sur le site de jenkins
+$cat cat /var/lib/jenkins/secrets/initialAdminPassword
+- Telecharger le plugin GitHub
+
+Une fois que vous êtes connecté, aller dans admin et configure puis changer le mot de passe admin.
+2. Installer le pluggin deploy to container puis installer et redémarrer
+3. Pour connecter avec tomcat
+- aller configure
+- credential
+- jenkins
+- Identifiants globaux
+- ajouter un nouveau credential
+- Ajouter des identifiants
+pour tomcatselectionner username and password qu'on a deja defini dans le fichier tomcat_users.xml.
+- user: deployer
+- password: deployer
+- ID: tomcat_deployer
+- description: tomcat_deployer
+-Cliquer sur create
+Ensuite créer un nouveau projet BuildAndDeployJob et selectionner mavenproject
+- description: Build code with help of maven and deploy it on Tomcat server
+- selectionner git et copier/coller le lien de github dans Repository URL: https://github.com/Makan763/Hello-world.git
+- Si github n'est pas privé donc il n'a pas de credential.
+- Goals and options: clean install
+- Add post-build action: Deploy war/ear to a container
+Aller dans le terminal 
+$cd /var/lib/jenkins/workspace/
+$ll
+$ cd FirstMavenProject
+$ll
+$cd webapp/
+$ll
+$ cd target/
+$ll
+Copier/coller ce lien dans 
+WAR/EAR files: webapp/target/webapp.war ou soit met **/*.war
+Context Path: vous pouvez laisser vide
+- Add Container: tomcat8 puis selectionner le crendential
+-Tomcat URL: http://18.207.178.227:8080/
+
+
+**** AUTOMATISATION AVEC JENKINS GITHUB****
+- Aller sur le projet
+- configure
+- Selectionner Git
+- Selectionner Poll SCM
+- Shedule:* * * * *
+on met espace entre les étoiles
+Et je vais lancer l'automatisation le dimache, je met * * * * 0
+pourquoi 0?, parceque le numéro du dimanche est 0

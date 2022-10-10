@@ -1,0 +1,92 @@
+Pour installer tomcat sur amazon linux
+0. $sudo -i
+1. Installer java 
+$ amazon-linux-extras
+il t'affichera la version de java que tu dois installer et tu fais copier coller devant la commande.
+$ amazon-linux-extras install java-openjdk11
+2. Taper la commande suivante pour avoir la version de java
+$ java -version
+Ensuite aller sur google et ecrit tomcat download puis copier le lien du fichier tar.gz pour telecharger avec wget
+voici le lien : https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+$ wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+
+$pwd pour voir le chemin si on est bien en dans le root et si cela est vrai accédons dans le opt
+$ cd opt
+$ ll
+la commande ll nous affiche le contenu du dossier
+3. Maintenant vous pouvez télécharger le fichier dans le dossier opt
+$ wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+$ll
+4. Nous avons téléchargé le fichier donc decompresser avec la commande tar -xvzf
+$ tar -xvzf apache-tomcat-9.0.65.tar.gz
+$ll
+5. Deplaçons le dossier decompresse dans le dossier tomcat
+$ mv apache-tomcat-9.0.65 tomcat
+$ll
+il est maintenant dans le dossier tomcat
+6. Accédons dans le dossier tomcat et fait ll
+$ cd tomcat
+$ll
+7. Accéder dans le dossier bin
+$ cd bin
+$ll
+8. Exécuter le terminal le script du fichier  startup.sh pour lancer le service tomcat
+$./ startup.sh
+- Pour demarrer le service tomcat, il faut aller dans le dossier /opt/tomcat/bin et  lancer le ./script.sh
+$./script.sh
+
+9. Copier l'adresse IP public sur navigateuret ave le port 8080 que vous avez autorisé dans le groupe de sécurity sinon vous povez pas aller sur internet
+sur le navigateur voici: 18.207.178.227:8080
+10. Une fois que vous êtes sur le server d'apache cliquer sur manager App et vous obtiendrez une erreur sur 403 Access Danied avec context.xml sur Ecran
+10. Puis aller sur le dossier opt et affiche les informations avec la commande ll
+$ cd ../..
+$pwd
+$ll
+11. Aller dans le dossier tomcat
+$cd tomcat
+12. Tapez la commande find / -name context.xml
+$ find / -name context.xml
+13. Une vous les 3 fichiers context.xml, prenez celui qui se trouve dans le host-manager pour modifier
+$ vi /opt/tomcat/webapps/host-manager/META-INF/context.xml
+
+14. Voici le contenu du fichier et commenter la balise Valve puis enregistrer
+15. Ouvrer le fichier context.xml dans le dossier manager et commenter la balise Valve aussi
+$ vi /opt/tomcat/webapps/manager/META-INF/context.xml.
+16. Aller dans le dossier bin et ll faites puis copier le script shutdown.sh
+ pour arreter le service tomcat.
+$cd bin
+$ ll
+17. Exécuter le script shutdown.sh
+
+Maintenant le service tomcat est arrêté, rafraichir sur le navigateur pour vérifier et vous trouverez qu'il ne marche pas.
+
+18. Redemarrer le service tomcat avec le script startup.sh
+$ ./startup.sh
+19. Une fois qu'il demarré le navigateur sera affiché cette fois en demandant de saisir le nom d'utilisateur et le mot de passe donc aller dans le dossier bin
+$ cd ..
+$ ll
+20. Aller dans le dossier conf 
+$ cd conf
+$ll
+21. Mettez à jour le fichier tomcat-users.xml dans la balise qui commence par role.
+ -->
+<!--
+  <role rolename="manager-gui"/>
+  <role rolename="manager-script"/>
+  <role rolename="manager-jmx"/>
+  <role rolename="manager-status"/>
+  <user username="admin" password="admin" roles="manager-gui,manager-script,manager-jmx,manager-status"/>
+  <user username="deployer" password="deployer" roles="manager-script"/>
+  <user username="tomcat" password="tomcat" roles="manager-gui"/>
+  </tomcat-users>
+22. Créer un lien avec ln -s pour startup.sh.
+$ ln -s /opt/tomcat/bin/startup.sh /usr/local/bin/tomcatup
+$echo $PATH
+/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+vous aurrez le lien affiché ci-dessus.
+23. Créer un lien avec ln -s pour shutdown.sh
+$ln -s /opt/tomcat/bin/shutdown.sh /usr/local/bin/tomcatdown
+$echo $PATH
+/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
+

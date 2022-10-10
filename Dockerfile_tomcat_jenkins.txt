@@ -1,0 +1,208 @@
+1. Créer une image Dockerfile
+2. Ecrit ces codes ci-desous:
+***************************
+FROM centos:7
+RUN yum install java -y
+RUN mkdir /opt/tomcat
+WORKDIR /opt/tomcat
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz .   // télécharger les packages tomcat
+RUN tar -xvzf apache-tomcat-9.0.65.tar.gz                                               //extraire les packages tomcat
+RUN mv apache-tomcat-9.0.65/* /opt/tomcat                                              //deplacer le fichier vers /opt/tomcat
+EXPOSE 8080
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]          // il lance le service
+                                                         // le port est 8080
+*********************************
+3. Sauvegarder les codes.
+4. docker build -t mytomcat .  // Il crée mon image docker
+5. $ docker images  // il affiche mes images
+6. $ docker run -d --name mytomcat-server -p 8083:8080 mytomcat  // il crée notre container via notre images mytomcat
+7. $ docker ps -a
+
+****Create a Customized Dockerfile for Tomcat****
+
+Il faut supprimer le Dockerfile
+8. Créer un nouveau fichier Dockerfile avec ces codes ci-dessous:
+*******************************************
+FROM tomcat:latest
+RUN cp -R /usr/local/tomcat/webapps.dist/* /usr/local/tomcat/webapps
+
+*******************************************
+9. $ docker build -t demotomcat .  // cree l'image demotomcat de tomcat
+10. docker images  // affiche mes images
+11. $ docker run -d --name demotomcat-container -p 8085:8080 demotomcat  // crée le conteneur demotomcat via image demotomcat.
+*******Dockerfile et jenkins*********
+12. $ cat /etc/passwd  // il affiche le nom d'utilisateur
+13. $ cat /etc/group   // il affiche le nom du group
+14. $ useradd dockeradmin  // il crée un utilisateur nommé dockeradmin et crée un group par defaut dockeradmin.
+
+15. $ passwd dockeradmin  // definit le mot de l'utilisateur pour user dockeradmin.
+-je donne ici un mot de passe à l'utilisateur: 1234
+16. $ id dockeradmin    // affiche l'id de user et du group
+result: uid=1001(dockeradmin) gid=1001(dockeradmin) groups=1001(dockeradmin)
+17. Maintenant affecte l'utilisateur dockeradmin au group docker
+$ usermod -aG docker dockeradmin   // il ajoute l'utilisateur dockeradmin au group docker
+- il faut dupliquer la session et se connecter avec dockeradmin
+18. vi /etc/ssh/sshd_config    // ouvre ce fichier // une fois que le fichier est ouvert
+- ajouter en bas de RekeyLimit default none: /Password et decommenter passwordAuthentification
+ PasswordAuthentication yes et commenter PasswordAuthentication no
+
+19. Redémarrer le service sshd   //le service sshd est rédemarré mais il ne faut jamais eteindre la session sinon vous pourrez plus se connecter en ssh
+$ service sshd reload et systemctl start sshd.service mais si le service ne demarre pas supprimer openssh-server et reinstaller puis demarrer le service
+Attention cette lance pas souvent le service et si le service sshd est arrêté tu ne pourras pas te connecter en ssh
+20. Au lieu de te connecter en ec2-user, tu peux te connecter avec ton user dockeradmin sans la clé
+21. Demarrer le service jenkins et aller sur l'interface web
+22. Ajouter le plugin publish over ssh dans jenkins Available
+- Manage jenkins
+- Manage Plugins
+- Availabe
+- Filter: publish over ssh
+- Cocher
+- Install with restart
+- Retour
+- Manage jenkins
+- Configure System
+- SSH Servers         // il se trouve en bas
+- Cliquer sur Add
+- Name: dockerhost     //ecrit le nom de votre server docker host( ici c'est docker dockerhost)
+- Hostname: 10.0.1.86   // met adresse ip privée de votre machine dockerhost
+- Username: dockeradmin
+- Advanced                 //cliquer sur advanced
+- Cocher User password authentification
+- Password: 1234          // le mot de pass de user dockeradmin est: docker
+Pour le Path to key, aller sur le terminal
+$sudo su -      //etant en root
+$ sudo su - dockeradmin  // aller dans la machine dockerhost en root et tapez cette commande pour aller générer la cle ssh-keygen de user dockeradmin de jenkins
+copier ce chemin l'endroit où la cle privée se trouve /home/dockeradmin/.ssh/id_rsa mais moi j'ai coché authentification avec mot de passe
+23. $ cd /home/dockeradmin/.ssh  // 
+24. ll    // affiche le contenu du dossier pui aller dans le navigateur de jenkins pour tester la configuration
+25 Succes
+26. Cliquer sur app
+27. Save
+Pour copier le BuildAndDeployJob:
+   - New Item
+   - BuildAndDeployOnContainer      // le nom du nouveau projet
+   - From Copy  // eccrire le nom du projet à copier(BuildAndDeployJob)
+   - OK
+29. Cliquer sur le projet BuildAndDeployOnContainer      
+   - laisser toutes les configurations et suprimer la partie (Deploy war/ear to a container)
+30.Add post-build action: Selectionner Send build artifacts over SSH
+- Sources files: webapp/target/*.war
+- Remove prefix: webapp/target
+- Remote directory: /home/dockeradmin            //il crée ce cd dossiers(/home/dockeradmin) copie l'artifact(webapp.war) dans ce chemin
+- Aplly
+- Save
+Maintenant aller sur le terminal 
+$ll
+$ cd home/
+$cd dockeradmin/
+$ll // vous trouverez que le fichier webapp.war existe.
+31. Supprimer le contenu Remote directory sur l'interface de jenkins
+Remote directory: /home/dockeradmin   // enlever ce contenu (/home/dockeradmin) et cliquer sur apply et enregistrer
+32. Aller sur le terminal et revenir sur le dossier home avec (cd ../..)
+$pwd
+/home/dockeradmin   vous êtes ici
+$ll affiche le contenu et vous trouverez le dossier home
+33. Supprimer le dossier home/
+$rm -rf home/    // il a supprimé le dossier home/
+$pwd      // affiche le contenu du dossier et il montre vide
+33. Executer à nouveau de le Build de jenkins et aller sur le terminal
+34 ll    // le fichier webapp.war est affiché.
+***** Update Tomcat dockefile to automate deployment process*****
+35. $exit
+36. $cd /opt
+37. $ll nous trouverons trois dossiers aws, containerd, rh
+38. Crée un dossier docker
+$ mkdir docker
+$ ll      // nous avons les trois dossiers et le dossier docker
+39. Changer le propriétaire du dossier docker avec la commande chown -R
+$ chown -R dockeradmin:dockeradmin docker   //maintenant le dossier(docker) appartient à l'utilisateur et group dockeradmin
+$ ls -ld   // verifie la permission et opt appartient au root
+$ cd ..  // sortir dans le dossier opt
+$ cd /root   // accéder au dossier root
+$ ll    // affiche le contenu et vous trouverez le fichier Dockerfile.
+40. Deplacez ce fichier Dockerfile avec la commande mv
+$ mv Dockerfile /opt/docker/           // le Dockerfile est deplcé vers le docker
+41. Aller dans le dossier docker avec la comande cd /opt/docker/
+$  cd /opt/docker/               // on retrouve le fichier Dockerfile ici
+$ ll -l   // il appartient au root donc changer le propriétaire
+42. chown -R dockeradmin:dockeradmin /opt/docker  il appartient au proprietaire et le group dockeradmin
+43. Aller l'interface graphique de  jenkins et dans la partie (Remote directory) ecrit(//opt//docker)
+44. Lancer le Build de jenkins et vous trouverez le fichier webapp.war(artifact)
+$ ll   // il est revenu le fichier et il appartient à l'user dockeradmin et le groupe dockeradmin
+45. Modifier le fichier Dockerfile
+$ vi Dockerfile                   // il ouvre le fichier Dockerfile met cette ligne ci-desous:
+COPY ./*.war  /usr/local/tomcat/webapps
+46. Créer l'image avec la commande suivante après avoir ajouté la ligne ci-dessus
+$docker build -t tomcat:v1 .
+$docker images   //nos images sont affichées
+47. Crée un container avec cette image tomcat
+$ docker run -d --name tomcatv1 -p 8086:8080 tomcat:v1
+48. Aller sur le navigateur et copier AdrvIP:8086/webapp
+**************** Automate build and deployment on Docker container********************
+49. Sur l'interface jenkins dans la partie exec command ecrit les commandes suivantes:
+
+Exec command: cd /opt/docker                     //parceque l'image Dockerfile se trouve dans ce dossier
+              docker build -t regapp:v1 .;
+              docker run -d --name registerapp -p 8087:8080 regapp:v1
+
+- Apply
+- Save
+50. Aller sur le terminal
+$ docker images    // affiche les images
+$ docker ps -a    //affiche tous les containers
+$ docker stop 71b47d9d6250 e0fb7fbaa5d1 e62c9a125fa0   // arrête les containers qui ont ces identifiants en cours d'execution.
+$ docker ps -a    //tous les 3 containers sont arrêtés à l'affichage
+$ docker container prune      // supprime tous les containers
+$ docker ps -a    // nous verrons que nos conteneurs sont tous supprimés par la commande prune ci-dessus.
+$ docker image prune -a            // suprime tous les images.
+$ docker images    // nous verrons que nos images sont toutes supprimées par la commande prune ci-dessus.
+51. Après avoir lancé ces commandes avec prune, nous n'avons plus d'images et des conteneurs mais chaque fois qu'on lance notre build jenkins, il nous génère des nouveaux images et des conteneurs.
+52. lancer le build jenkins
+53.$ docker images // les images sont affichés.
+54. docker ps -a   // les conteneurs sont affichés.
+55. $ll  // nos deux fichiers(Dockerfile, webapp.war) existent toujours pour la création de notre conteneurs.
+56. modififier le projet et pusher sur git et vous verrez que l'automatisation se passe au niveau de build de jenkins sans appuyer sur le button build
+
+**************************Jenkins job to automate CI/CD to deploy application on docker container********************************
+
+57. Sur l'interface jenkins dans la partie exec command modifie les codes et remplace les par les commandes suivantes:
+Exec command: cd /opt/docker;
+              docker build -t regapp:v1 .;
+              docker stop registerapp;
+              docker rm registerapp;
+              docker run -d --name registerapp -p 8087:8080 regapp:v1
+pourquoi on a stoppé et supprimé? parceque si on fait pas ça, il ne pourra pas créer le conteneur, il dira qu'il existe dejà.
+ensuite vous avez bien regardé les etapes de build, vous verrez que la couleur n'est pas en vert mais après avoir ajouté ces deux lignes, il est en vert.
+Le vert notre nous montre qu'il exécuté avec succès sans erreur.
+- Apply
+- Save
+- Build now
+
+58. $docker images
+
+regapp       v1        a77970818de5   3 minutes ago    479MB
+<none>       <none>    46d9c95e4ced   15 minutes ago   479MB
+<none>       <none>    391669ec31ed   18 minutes ago   479MB
+<none>       <none>    d535d1a7a3c6   30 minutes ago   479MB
+tomcat       latest    81ffce3265f0   7 days ago       475MB
+59. $docker ps -a
+CONTAINER ID   IMAGE       COMMAND             CREATED         STATUS         PORTS                                       NAMES
+8352a257fe7d   regapp:v1   "catalina.sh run"   4 minutes ago   Up 4 minutes   0.0.0.0:8087->8080/tcp, :::8087->8080/tcp   registerapp
+
+60. Maintant modifier le fichier index.jsp et faire avec la commande commit.
+- modification de fichier index.jsp
+- enregistrement de index.jsp
+- $ git commit -am "Update index.jsp" // une remarque sur -am, si on met -am, on a pas besoin de faire git add .
+- $ git push origin master
+- verifier sur jenkins et  actuliser la page,tu verras qu'il fera le build sans faire git push
+- Actualiser la page de l'application
+
+
+
+
+
+
+
+
+
+
